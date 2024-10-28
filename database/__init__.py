@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 # Define the database engine and base
-engine = create_engine(r"sqlite:///C:\Users\Asa Guest\PycharmProjects\KittingOptimization\database\shop_orders.db")
+engine = create_engine(r"sqlite:///C:\Users\6J2739897\Documents\projects\KittingOptimization\Assets\database\shop_orders.db")
 Base = sqlalchemy.orm.declarative_base()
 
 

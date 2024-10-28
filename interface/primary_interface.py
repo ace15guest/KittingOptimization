@@ -6,6 +6,7 @@ import os
 import database
 import ast
 
+
 class DefectMatchingApplication:
     def __init__(self, root):
         self.root = root
@@ -132,22 +133,28 @@ class DefectMatchingApplication:
 
     def save_positions(self):
         """Saves the current image positions, rotations, and file paths to a JSON file."""
+        if self.pn_var_pct.get() == "":
+            messagebox.showwarning("Need Part Number", "A part number is needed to save positions")
+            return
         save_data = {
-            position: {"rotation": info["rotation"], "file_path": info["file_path"]}
-            for position, info in self.image_positions.items()
+            self.pn_var_pct.get(): {position: {"rotation": info["rotation"], "file_path": info["file_path"]}
+                              for position, info in self.image_positions.items()}
         }
-        with open("image_positions.json", "w") as f:
+        save_file = filedialog.asksaveasfilename(defaultextension='.json', filetypes=[("JSON", "*.json")], initialfile=f"{self.pn_var_pct.get()}")
+        with open(f"{save_file}", "w") as f:
             json.dump(save_data, f)
         messagebox.showinfo("Saved", "Image positions and file paths saved successfully.")
 
-        database.add_part(self.db_session, self.pn_var_pct.get(), str(list(save_data.keys())))
+        database.add_part(self.db_session, self.pn_var_pct.get(), str(list(save_data[self.pn_var_pct.get()].keys())))
 
     def load_positions_pct(self):
         """Loads image positions, rotations, and file paths from a JSON file."""
         try:
-            with open("image_positions.json", "r") as f:
+            load_file = filedialog.askopenfilename(defaultextension=".json", filetypes=[("JSON", "*.json")])
+            with open(load_file, "r") as f:
                 loaded_data = json.load(f)
-            for position_str, data in loaded_data.items():
+            pn = list(loaded_data.keys())[0]
+            for position_str, data in loaded_data[pn].items():
                 x, y = map(int, position_str.split(','))
                 rotation = data["rotation"]
                 file_path = data["file_path"]
@@ -188,7 +195,7 @@ class DefectMatchingApplication:
         entry_shop_order.grid(row=0, column=1, padx=5, pady=5)
         # Part Number
         tk.Label(self.image_defects_tab, text="Part Number").grid(row=0, column=2, padx=5, pady=5)
-        entry_part_number = tk.Entry(self.image_defects_tab, textvariable=self.pn_var_idt)
+        entry_part_number = tk.Entry(self.image_defects_tab, textvariable=self.pn_var_idt, state="disabled")
         entry_part_number.grid(row=0, column=3, padx=5, pady=5)
         # Layer Number
         tk.Label(self.image_defects_tab, text="Layer Number").grid(row=1, column=0, padx=5, pady=5)
@@ -210,9 +217,13 @@ class DefectMatchingApplication:
 
     def load_positions_idt(self):
         try:
-            with open("image_positions.json", "r") as f:
+            load_file = filedialog.askopenfilename(defaultextension=".json", filetypes=[("JSON", "*.json")])
+
+            with open(load_file, "r") as f:
                 loaded_data = json.load(f)
-            for position_str, data in loaded_data.items():
+            pn =list(loaded_data.keys())[0]
+            self.pn_var_idt.set(pn)
+            for position_str, data in loaded_data[pn].items():
                 x, y = map(int, position_str.split(','))
                 rotation = data["rotation"]
                 file_path = data["file_path"]
@@ -261,21 +272,21 @@ class DefectMatchingApplication:
         return
 
     def load_to_db(self):
-
-        layer_order = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber="22").first().LayerOrder.strip())
+        if self.shop_order_num_var.get() == "" or self.layer_num_var.get() == "" or self.pn_var_idt.get() == "" or self.panel_num_var.get() == "":
+            messagebox.showwarning("Inputs Needed", "All inputs are necessary to load to the database")
+            return
+        layer_order = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber=self.pn_var_idt.get()).first().LayerOrder.strip())
         old_list = ["O" for i in layer_order]
 
         for idx, loc in enumerate(layer_order):
             if self.image_positions[loc]['x']:
                 old_list[idx] = "X"
 
-
-
         database.add_shop_order(self.db_session, self.shop_order_num_var.get(), self.pn_var_idt.get(), self.layer_num_var.get(), self.panel_num_var.get(), str(old_list))
 
         save_data = {
-            position: {"rotation": info["rotation"], "file_path": info["file_path"], "x": info["x"]}
-            for position, info in self.image_positions.items()
+            self.pn_var_idt.get(): {position: {"rotation": info["rotation"], "file_path": info["file_path"]}
+                                    for position, info in self.image_positions.items()}
         }
         with open("image_positions.json", "w") as f:
             json.dump(save_data, f)
