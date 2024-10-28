@@ -41,7 +41,7 @@ def add_part(session, part_number, layer_order):
     print(f"Added part: {new_part}")
 
 def add_shop_order(session, shop_order_number, part_number, layer_number, panel_number, images):
-
+    # TODO: Look into Notion database API
     new_order = ShopOrder(
         ShopOrderNumber=shop_order_number,
         PartNumber=part_number,
@@ -49,6 +49,7 @@ def add_shop_order(session, shop_order_number, part_number, layer_number, panel_
         PanelNumber=panel_number,
         Images=images
     )
+    # TODO: Readd date column
     session.add(new_order)
     session.commit()
 
