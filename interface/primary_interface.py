@@ -3,6 +3,8 @@ from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import json
 import os
+import database
+import ast
 
 class DefectMatchingApplication:
     def __init__(self, root):
@@ -13,15 +15,28 @@ class DefectMatchingApplication:
         self.notebook.pack(expand=True, fill="both")
 
         # Initialize variables
+        self.db_location = r"C:\Users\Asa Guest\PycharmProjects\KittingOptimization\interface\shop_orders.db"
         self.image_positions = {}  # Store image placements on the grid with rotation info
         self.rotation_angle = 0  # Track the current rotation angle of the image
         self.loaded_image = None  # Original loaded image
         self.image_file_path = None  # Store path of the currently loaded image
         self.image_thumbnails = []  # List to hold rotated thumbnails
+        #Database connection
+        Session = database.sessionmaker(bind=database.engine)
+        self.db_session = Session()
+
+        # Input Vars
+        self.pn_var_pct = tk.StringVar()
+
+        self.shop_order_num_var = tk.StringVar()
+        self.layer_num_var = tk.StringVar()
+        self.pn_var_idt = tk.StringVar()
+        self.panel_num_var = tk.StringVar()
 
         # Set up tabs and widgets
         self.create_panel_creation_tab()
         self.create_image_defects_tab()
+
     # Panel Creation
     def create_panel_creation_tab(self):
         """Creates the Panel Creation tab and its components."""
@@ -31,7 +46,7 @@ class DefectMatchingApplication:
         # Part Number Entry
         part_label = tk.Label(self.panel_creation_tab, text="Part Number:")
         part_label.grid(row=0, column=1, pady=5)
-        self.part_number_entry = tk.Entry(self.panel_creation_tab, width=20)
+        self.part_number_entry = tk.Entry(self.panel_creation_tab, textvariable=self.pn_var_pct, width=20)
         self.part_number_entry.grid(row=0, column=2, pady=5)
 
         # Image Upload Button
@@ -58,7 +73,6 @@ class DefectMatchingApplication:
         self.canvas_pct.bind("<Button-1>", self.place_image_on_grid)
 
         self.draw_grid(self.canvas_pct)
-
 
     def upload_image(self):
         """Handles uploading an image and prepares it for display."""
@@ -100,7 +114,7 @@ class DefectMatchingApplication:
             grid_size = 50
             x = (event.x // grid_size) * grid_size
             y = (event.y // grid_size) * grid_size
-            position = (x, y)
+            position = f"{x},{y}"
 
             # Remove image if it exists at this position
             if position in self.image_positions:
@@ -125,6 +139,8 @@ class DefectMatchingApplication:
         with open("image_positions.json", "w") as f:
             json.dump(save_data, f)
         messagebox.showinfo("Saved", "Image positions and file paths saved successfully.")
+
+        database.add_part(self.db_session, self.pn_var_pct.get(), str(list(save_data.keys())))
 
     def load_positions_pct(self):
         """Loads image positions, rotations, and file paths from a JSON file."""
@@ -168,20 +184,20 @@ class DefectMatchingApplication:
 
         # Shop Order Number
         tk.Label(self.image_defects_tab, text="Shop Order Number").grid(row=0, column=0, padx=5, pady=5)
-        entry_shop_order = tk.Entry(self.image_defects_tab)
+        entry_shop_order = tk.Entry(self.image_defects_tab, textvariable=self.shop_order_num_var)
         entry_shop_order.grid(row=0, column=1, padx=5, pady=5)
         # Part Number
         tk.Label(self.image_defects_tab, text="Part Number").grid(row=0, column=2, padx=5, pady=5)
-        entry_part_number = tk.Entry(self.image_defects_tab)
+        entry_part_number = tk.Entry(self.image_defects_tab, textvariable=self.pn_var_idt)
         entry_part_number.grid(row=0, column=3, padx=5, pady=5)
         # Layer Number
         tk.Label(self.image_defects_tab, text="Layer Number").grid(row=1, column=0, padx=5, pady=5)
-        entry_layer_number = tk.Entry(self.image_defects_tab)
+        entry_layer_number = tk.Entry(self.image_defects_tab, textvariable=self.layer_num_var)
         entry_layer_number.grid(row=1, column=1, padx=5, pady=5)
 
         # Panel Number
         tk.Label(self.image_defects_tab, text="Panel Number").grid(row=1, column=2, padx=5, pady=5)
-        entry_panel_number = tk.Entry(self.image_defects_tab)
+        entry_panel_number = tk.Entry(self.image_defects_tab, textvariable=self.panel_num_var)
         entry_panel_number.grid(row=1, column=3, padx=5, pady=5)
 
         # Load Panel Layout
@@ -189,7 +205,7 @@ class DefectMatchingApplication:
         load.grid(row=3, column=1)
 
         # Upload to Database
-        upload = tk.Button(self.image_defects_tab, text="Insert Data", command=None)
+        upload = tk.Button(self.image_defects_tab, text="Insert Data", command=self.load_to_db)
         upload.grid(row=7, column=1, pady=10)
 
     def load_positions_idt(self):
@@ -209,6 +225,10 @@ class DefectMatchingApplication:
                     image_id = self.canvas_idt.create_image(x, y, anchor="nw", image=thumbnail)
                     self.image_thumbnails.append(thumbnail)  # Keep a reference
                     self.image_positions[position_str] = {
+                        'x': False,
+                        'line_id1': None,
+                        'line_id2': None,
+
                         'id': image_id,
                         'rotation': rotation,
                         'file_path': file_path
@@ -220,16 +240,48 @@ class DefectMatchingApplication:
             messagebox.showerror("Error", "No saved positions found.")
         return
 
-
     def x_out_images(self, event):
         grid_size = 50
         x = (event.x // grid_size) * grid_size
         y = (event.y // grid_size) * grid_size
         position = f"{x},{y}"
-        x_id = self.canvas_idt.create_line(x, y, x + 50, y + 50, fill="red", width=2)
-        self.canvas_idt.create_line(x + 50, y, x, y + 50, fill="red", width=2)
+
+        if position in self.image_positions:
+            if self.image_positions[position]["x"] == True:
+                self.image_positions[position]["x"] = False
+                self.canvas_idt.delete(self.image_positions[position]["line_id1"])
+                self.canvas_idt.delete(self.image_positions[position]["line_id2"])
+                self.image_positions[position]["line_id1"] = None
+                self.image_positions[position]["line_id2"] = None
+            else:
+                self.image_positions[position]["line_id1"] = self.canvas_idt.create_line(x, y, x + 50, y + 50, fill="red", width=2)
+                self.image_positions[position]["line_id2"] = self.canvas_idt.create_line(x + 50, y, x, y + 50, fill="red", width=2)
+                self.image_positions[position]["x"] = True
+
         return
 
+    def load_to_db(self):
+
+        layer_order = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber="22").first().LayerOrder.strip())
+        old_list = ["O" for i in layer_order]
+
+        for idx, loc in enumerate(layer_order):
+            if self.image_positions[loc]['x']:
+                old_list[idx] = "X"
+
+
+
+        database.add_shop_order(self.db_session, self.shop_order_num_var.get(), self.pn_var_idt.get(), self.layer_num_var.get(), self.panel_num_var.get(), str(old_list))
+
+        save_data = {
+            position: {"rotation": info["rotation"], "file_path": info["file_path"], "x": info["x"]}
+            for position, info in self.image_positions.items()
+        }
+        with open("image_positions.json", "w") as f:
+            json.dump(save_data, f)
+        messagebox.showinfo("Saved", "Image positions and file paths saved successfully.")
+
+        return
 
 
 if __name__ == "__main__":

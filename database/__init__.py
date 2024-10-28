@@ -1,24 +1,67 @@
-import sqlite3
+from sqlalchemy import create_engine, Column, String, Integer, DateTime
+import sqlalchemy
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+from datetime import datetime
+# Define the database engine and base
+engine = create_engine(r"sqlite:///C:\Users\Asa Guest\PycharmProjects\KittingOptimization\database\shop_orders.db")
+Base = sqlalchemy.orm.declarative_base()
 
 
+# Define the ShopOrder model
+class ShopOrder(Base):
+    __tablename__ = 'shop_orders'
+
+    ShopOrderNumber = Column(String, primary_key=True)
+    PartNumber = Column(String, nullable=False)
+    LayerNumber = Column(String, nullable=False)
+    PanelNumber = Column(String, nullable=False)
+    Images = Column(String, nullable=False)
+    # OrderDate = Column(DateTime, default=datetime.now())
+    # Relationship to parts
+    # part = relationship("Part", back_populates="shop_orders")
+
+
+class Part(Base):
+    __tablename__ = 'parts'
+
+    PartNumber = Column(String, primary_key=True)
+    LayerOrder = Column(String, nullable=False)
+
+    # Relationship to shop orders
+    # shop_orders = relationship("ShopOrder", back_populates="part")
+
+
+def add_part(session, part_number, layer_order):
+
+    new_part = Part(PartNumber=part_number, LayerOrder=layer_order)
+    session.add(new_part)
+    session.commit()
+
+    print(f"Added part: {new_part}")
+
+def add_shop_order(session, shop_order_number, part_number, layer_number, panel_number, images):
+
+    new_order = ShopOrder(
+        ShopOrderNumber=shop_order_number,
+        PartNumber=part_number,
+        LayerNumber=layer_number,
+        PanelNumber=panel_number,
+        Images=images
+    )
+    session.add(new_order)
+    session.commit()
+
+    print(f"Added shop order: {new_order}")
+
+# Create the database and table
 def create_db():
-    # Connect to the database (or create it)
-    connection = sqlite3.connect('shop_orders.db')
-    cursor = connection.cursor()
-
-    # Create the table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS shop_orders (
-            ShopOrderNumber TEXT PRIMARY KEY,
-            PartNumber TEXT NOT NULL,
-            LayerNumber INTEGER NOT NULL,
-            PanelNumber INTEGER NOT NULL,
-            Images TEXT NOT NULL
-        )
-    ''')
-
-    # Commit changes and close the connection
-    connection.commit()
-    connection.close()
-
+    Base.metadata.create_all(engine)
     print("Database and table created successfully.")
+
+
+# Usage
+if __name__ == "__main__":
+    # Create the database and tables
+    create_db()
+

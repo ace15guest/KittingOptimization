@@ -27,6 +27,6 @@ def exhaustive(pn=None, database: pd.DataFrame = None):
             layer_ids[layer][row['Layer ID']] = {}
             layer_ids[layer][row['Layer ID']]['Failure'] = list(row['Failure'])
             layer_ids[layer][row['Layer ID']]['Date'] = row['Date Ran']
-
+    return
 
 exhaustive(database=df)
