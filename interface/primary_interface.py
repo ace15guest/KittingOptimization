@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+
+import sqlalchemy.exc
 from PIL import Image, ImageTk
 import json
 import os
@@ -22,6 +24,8 @@ class DefectMatchingApplication:
         self.loaded_image = None  # Original loaded image
         self.image_file_path = None  # Store path of the currently loaded image
         self.image_thumbnails = []  # List to hold rotated thumbnails
+        self.pn_layers = [] # Holds layers
+
         #Database connection
         Session = database.sessionmaker(bind=database.engine)
         self.db_session = Session()
@@ -34,11 +38,19 @@ class DefectMatchingApplication:
         self.pn_var_idt = tk.StringVar()
         self.panel_num_var = tk.StringVar()
 
+        # PCT Vars
+        self.layer_name_var = tk.StringVar()
+        self.pn_layers_var = tk.StringVar()
+
         # Set up tabs and widgets
         self.create_panel_creation_tab()
         self.create_image_defects_tab()
 
     # Panel Creation
+
+    def create_session(self):
+        Session = database.sessionmaker(bind=database.engine)
+        self.db_session = Session()
     def create_panel_creation_tab(self):
         """Creates the Panel Creation tab and its components."""
         self.panel_creation_tab = ttk.Frame(self.notebook)
@@ -53,6 +65,17 @@ class DefectMatchingApplication:
         # Image Upload Button
         upload_button = tk.Button(self.panel_creation_tab, text="Upload Image", command=self.upload_image)
         upload_button.grid(row=2, column=1, pady=20)
+
+        # Add/Remove Layers
+        self.add_button = tk.Button(self.panel_creation_tab, text="Add Layer", command=self.add_layer)
+        self.add_button.grid(row=2, column=2, )
+        self.remove_button = tk.Button(self.panel_creation_tab, text="Remove Layer", command=self.delete_layer)
+        self.remove_button.grid(row=2, column=3)
+        self.layer_name_entry = tk.Entry(self.panel_creation_tab, textvariable=self.layer_name_var)
+        self.layer_name_entry.grid(row=2, column=4, padx=2)
+
+        self.layer_names_entry = tk.Entry(self.panel_creation_tab, textvariable=self.pn_layers_var, width=50)
+        self.layer_names_entry.grid(row=6, column=2, columnspan=3)
 
         # Image Display Label
         self.image_label = tk.Label(self.panel_creation_tab)
@@ -75,6 +98,22 @@ class DefectMatchingApplication:
 
         self.draw_grid(self.canvas_pct)
 
+    def add_layer(self):
+
+        if self.layer_name_entry.get() == "":
+            return
+        self.pn_layers.append(self.layer_name_entry.get())
+        self.layer_names_entry.delete(0, tk.END)
+
+        self.layer_names_entry.insert(0, str(self.pn_layers))
+        return
+    def delete_layer(self):
+        self.pn_layers = self.pn_layers[0:-1]
+        self.layer_names_entry.delete(0, tk.END)
+
+        self.layer_names_entry.insert(0, str(self.pn_layers))
+
+        return
     def upload_image(self):
         """Handles uploading an image and prepares it for display."""
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.png;*.jpeg;*.bmp")])
@@ -145,7 +184,7 @@ class DefectMatchingApplication:
             json.dump(save_data, f)
         messagebox.showinfo("Saved", "Image positions and file paths saved successfully.")
 
-        database.add_part(self.db_session, self.pn_var_pct.get(), str(list(save_data[self.pn_var_pct.get()].keys())))
+        database.add_part(self.db_session, self.pn_var_pct.get(), str(list(save_data[self.pn_var_pct.get()].keys())), str(self.pn_layers))
 
     def load_positions_pct(self):
         """Loads image positions, rotations, and file paths from a JSON file."""
@@ -195,19 +234,22 @@ class DefectMatchingApplication:
         tk.Label(self.image_defects_tab, text="Shop Order Number").grid(row=0, column=0, padx=5, pady=5)
         entry_shop_order = tk.Entry(self.image_defects_tab, textvariable=self.shop_order_num_var)
         entry_shop_order.grid(row=0, column=1, padx=5, pady=5)
+
+        # Panel Number
+        tk.Label(self.image_defects_tab, text="Panel Number").grid(row=1, column=0, padx=5, pady=5)
+        entry_panel_number = tk.Entry(self.image_defects_tab, textvariable=self.panel_num_var)
+        entry_panel_number.grid(row=1, column=1, padx=5, pady=5)
+
         # Part Number
         tk.Label(self.image_defects_tab, text="Part Number").grid(row=0, column=2, padx=5, pady=5)
         entry_part_number = tk.Entry(self.image_defects_tab, textvariable=self.pn_var_idt, state="disabled")
         entry_part_number.grid(row=0, column=3, padx=5, pady=5)
         # Layer Number
-        tk.Label(self.image_defects_tab, text="Layer Number").grid(row=1, column=0, padx=5, pady=5)
-        entry_layer_number = tk.Entry(self.image_defects_tab, textvariable=self.layer_num_var)
-        entry_layer_number.grid(row=1, column=1, padx=5, pady=5)
+        tk.Label(self.image_defects_tab, text="Layer Number").grid(row=1, column=2, padx=5, pady=5)
+        self.entry_layer_number = tk.ttk.Combobox(self.image_defects_tab, textvariable=self.layer_num_var, state='readonly', values=[])
+        self.entry_layer_number.grid(row=1, column=3, padx=5, pady=5)
 
-        # Panel Number
-        tk.Label(self.image_defects_tab, text="Panel Number").grid(row=1, column=2, padx=5, pady=5)
-        entry_panel_number = tk.Entry(self.image_defects_tab, textvariable=self.panel_num_var)
-        entry_panel_number.grid(row=1, column=3, padx=5, pady=5)
+
 
         # Load Panel Layout
         load = tk.Button(self.image_defects_tab, text="Load Panel Layout", command=self.load_positions_idt)
@@ -220,11 +262,12 @@ class DefectMatchingApplication:
     def load_positions_idt(self):
         try:
             load_file = filedialog.askopenfilename(defaultextension=".json", filetypes=[("JSON", "*.json")])
-
             with open(load_file, "r") as f:
                 loaded_data = json.load(f)
             pn =list(loaded_data.keys())[0]
             self.pn_var_idt.set(pn)
+            layer_names = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber=pn).first().LayerNames.strip())
+            self.entry_layer_number['values'] = layer_names
             for position_str, data in loaded_data[pn].items():
                 x, y = map(int, position_str.split(','))
                 rotation = data["rotation"]
@@ -283,8 +326,13 @@ class DefectMatchingApplication:
         for idx, loc in enumerate(layer_order):
             if self.image_positions[loc]['x']:
                 old_list[idx] = "X"
-
-        database.add_shop_order(self.db_session, self.shop_order_num_var.get(), self.pn_var_idt.get(), self.layer_num_var.get(), self.panel_num_var.get(), str(old_list))
+        try:
+            database.add_shop_order(self.db_session, self.shop_order_num_var.get(), self.pn_var_idt.get(), self.layer_num_var.get(), self.panel_num_var.get(), str(old_list))
+        except sqlalchemy.exc.IntegrityError:
+            messagebox.showwarning('Exists in the database','This combination of ShopOrder, PartNumber, LayerNumber, PanelNumber exists in the database.')
+            self.db_session.close()
+            self.create_session()
+            return
 
         save_data = {
             self.pn_var_idt.get(): {position: {"rotation": info["rotation"], "file_path": info["file_path"]}

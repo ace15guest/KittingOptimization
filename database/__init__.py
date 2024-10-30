@@ -13,9 +13,9 @@ class ShopOrder(Base):
     __tablename__ = 'shop_orders'
 
     ShopOrderNumber = Column(String, primary_key=True)
-    PartNumber = Column(String, nullable=False)
-    LayerNumber = Column(String, nullable=False)
-    PanelNumber = Column(String, nullable=False)
+    PartNumber = Column(String, primary_key=True)
+    LayerNumber = Column(String, primary_key=True)
+    PanelNumber = Column(String, primary_key=True)
     Images = Column(String, nullable=False)
     # OrderDate = Column(DateTime, default=datetime.now())
     # Relationship to parts
@@ -25,16 +25,17 @@ class ShopOrder(Base):
 class Part(Base):
     __tablename__ = 'parts'
 
-    PartNumber = Column(String, primary_key=True)
+    PartNumber = Column(String, nullable= False, primary_key=True)
     LayerOrder = Column(String, nullable=False)
+    LayerNames = Column(String, nullable=False)
 
     # Relationship to shop orders
     # shop_orders = relationship("ShopOrder", back_populates="part")
 
 
-def add_part(session, part_number, layer_order):
+def add_part(session, part_number, layer_order, layer_names):
 
-    new_part = Part(PartNumber=part_number, LayerOrder=layer_order)
+    new_part = Part(PartNumber=part_number, LayerOrder=layer_order, LayerNames=layer_names)
     session.add(new_part)
     session.commit()
 

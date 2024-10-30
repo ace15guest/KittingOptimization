@@ -3,7 +3,7 @@ import pandas as pd
 df = pd.read_excel(r'C:\Users\Asa Guest\PycharmProjects\KittingOptimization\Assets\ExampleDatabase.xlsx')
 
 
-def exhaustive(pn=None, database: pd.DataFrame = None):
+def exhaustive(pn=None):
     """
     This will try all combinations of layer matching and will only terminate if there is a perfect match
     pn: A dictionary with the part number as the key and # of layers as the value {pn: # of layers}
