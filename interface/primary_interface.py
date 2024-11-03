@@ -7,7 +7,7 @@ import json
 import os
 import database
 import ast
-
+import matching_algos
 
 class DefectMatchingApplication:
     def __init__(self, root):
@@ -24,7 +24,7 @@ class DefectMatchingApplication:
         self.loaded_image = None  # Original loaded image
         self.image_file_path = None  # Store path of the currently loaded image
         self.image_thumbnails = []  # List to hold rotated thumbnails
-        self.pn_layers = [] # Holds layers
+        self.pn_layers = []  # Holds layers
 
         #Database connection
         Session = database.sessionmaker(bind=database.engine)
@@ -45,12 +45,16 @@ class DefectMatchingApplication:
         # Set up tabs and widgets
         self.create_panel_creation_tab()
         self.create_image_defects_tab()
-
+        self.create_optimization_tab()
     # Panel Creation
 
     def create_session(self):
         Session = database.sessionmaker(bind=database.engine)
         self.db_session = Session()
+
+    def create_optimization_tab(self):
+        self.optimization_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.optimization_tab, text="Optimization")
     def create_panel_creation_tab(self):
         """Creates the Panel Creation tab and its components."""
         self.panel_creation_tab = ttk.Frame(self.notebook)
@@ -107,6 +111,7 @@ class DefectMatchingApplication:
 
         self.layer_names_entry.insert(0, str(self.pn_layers))
         return
+
     def delete_layer(self):
         self.pn_layers = self.pn_layers[0:-1]
         self.layer_names_entry.delete(0, tk.END)
@@ -114,6 +119,7 @@ class DefectMatchingApplication:
         self.layer_names_entry.insert(0, str(self.pn_layers))
 
         return
+
     def upload_image(self):
         """Handles uploading an image and prepares it for display."""
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.png;*.jpeg;*.bmp")])
@@ -177,7 +183,7 @@ class DefectMatchingApplication:
             return
         save_data = {
             self.pn_var_pct.get(): {position: {"rotation": info["rotation"], "file_path": info["file_path"]}
-                              for position, info in self.image_positions.items()}
+                                    for position, info in self.image_positions.items()}
         }
         save_file = filedialog.asksaveasfilename(defaultextension='.json', filetypes=[("JSON", "*.json")], initialfile=f"{self.pn_var_pct.get()}")
         with open(f"{save_file}", "w") as f:
@@ -249,8 +255,6 @@ class DefectMatchingApplication:
         self.entry_layer_number = tk.ttk.Combobox(self.image_defects_tab, textvariable=self.layer_num_var, state='readonly', values=[])
         self.entry_layer_number.grid(row=1, column=3, padx=5, pady=5)
 
-
-
         # Load Panel Layout
         load = tk.Button(self.image_defects_tab, text="Load Panel Layout", command=self.load_positions_idt)
         load.grid(row=3, column=1)
@@ -264,7 +268,7 @@ class DefectMatchingApplication:
             load_file = filedialog.askopenfilename(defaultextension=".json", filetypes=[("JSON", "*.json")])
             with open(load_file, "r") as f:
                 loaded_data = json.load(f)
-            pn =list(loaded_data.keys())[0]
+            pn = list(loaded_data.keys())[0]
             self.pn_var_idt.set(pn)
             layer_names = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber=pn).first().LayerNames.strip())
             self.entry_layer_number['values'] = layer_names
@@ -303,7 +307,7 @@ class DefectMatchingApplication:
         position = f"{x},{y}"
 
         if position in self.image_positions:
-            if self.image_positions[position]["x"] == True:
+            if self.image_positions[position]["x"]:
                 self.image_positions[position]["x"] = False
                 self.canvas_idt.delete(self.image_positions[position]["line_id1"])
                 self.canvas_idt.delete(self.image_positions[position]["line_id2"])
@@ -329,7 +333,7 @@ class DefectMatchingApplication:
         try:
             database.add_shop_order(self.db_session, self.shop_order_num_var.get(), self.pn_var_idt.get(), self.layer_num_var.get(), self.panel_num_var.get(), str(old_list))
         except sqlalchemy.exc.IntegrityError:
-            messagebox.showwarning('Exists in the database','This combination of ShopOrder, PartNumber, LayerNumber, PanelNumber exists in the database.')
+            messagebox.showwarning('Exists in the database', 'This combination of ShopOrder, PartNumber, LayerNumber, PanelNumber exists in the database.')
             self.db_session.close()
             self.create_session()
             return
