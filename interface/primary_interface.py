@@ -18,7 +18,6 @@ class DefectMatchingApplication:
         self.notebook.pack(expand=True, fill="both")
 
         # Initialize variables
-        self.db_location = r"C:\Users\Asa Guest\PycharmProjects\KittingOptimization\interface\shop_orders.db"
         self.image_positions = {}  # Store image placements on the grid with rotation info
         self.rotation_angle = 0  # Track the current rotation angle of the image
         self.loaded_image = None  # Original loaded image
@@ -38,6 +37,8 @@ class DefectMatchingApplication:
         self.pn_var_idt = tk.StringVar()
         self.panel_num_var = tk.StringVar()
 
+        self.pn_var_dropdown_opt = tk.StringVar()
+
         # PCT Vars
         self.layer_name_var = tk.StringVar()
         self.pn_layers_var = tk.StringVar()
@@ -55,6 +56,27 @@ class DefectMatchingApplication:
     def create_optimization_tab(self):
         self.optimization_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.optimization_tab, text="Optimization")
+        # Create Dropdown
+        self.part_number_dropdown = tk.ttk.Combobox(self.optimization_tab, textvariable=self.pn_var_dropdown_opt, state='readonly', values=[])
+        self.part_number_dropdown.grid(row=0, column=0)
+
+        # Optimization
+        optimize_btn = tk.Button(self.optimization_tab, text="Optimize", command=self.optimize_button_clicked)
+        optimize_btn.grid(row=0, column=1)
+
+
+        self.add_pns_to_opt_dropdown()
+
+
+    def optimize_button_clicked(self):
+        matching_algos.separate_layers(self.part_number_dropdown.get(), self.db_session)
+    def add_pns_to_opt_dropdown(self):
+        col_name = database.Part.PartNumber
+        stmt = database.select(col_name).distinct()
+        distinct_values = self.db_session.execute(stmt).scalars().all()
+        self.part_number_dropdown['values']=distinct_values
+        return
+
     def create_panel_creation_tab(self):
         """Creates the Panel Creation tab and its components."""
         self.panel_creation_tab = ttk.Frame(self.notebook)
