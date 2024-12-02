@@ -45,14 +45,48 @@ def matching_algos(layer_combinations, layer_info, layer_names):
         panel_options.append(option)
         good_percent.append(percentage)
         wasted.append(wasted_imgs)
-    data = {
-        "Panel Options": panel_options,
-        "Percent Yield": good_percent,
-        "Number Wasted": wasted
-    }
+    data = {}
+    for idx, layer in enumerate(layer_names):
+        cur_layer = [layer_combinations[i][idx] for i in range(len(layer_combinations))]
+        data[layer] = cur_layer
+
+    data["Percent Yield"] = good_percent
+    data["Number Wasted"] = wasted
+
     df = pd.DataFrame(data)
-    df.to_csv('Output.csv', index=False)
+    df.to_csv('All_Combinations.csv', index=False)
+    make_matches(df)
     return
+
+def make_matches(df):
+    equip = []
+    df = df.sort_values('Number Wasted')
+    wasted_vals = set(df["Number Wasted"])
+    for waste_val in wasted_vals:
+        matches_exist = True
+        while matches_exist:
+            temp_df = df.loc[df['Number Wasted'] == waste_val]
+            temp_df = temp_df.sort_values('Percent Yield', ascending=False)
+            temp_df = temp_df.reset_index(drop=True)
+            if len(temp_df) == 0:
+                break
+            match_made = temp_df.loc[0]
+            equip.append(match_made)
+
+            for col in temp_df.columns:
+                if str(col) in ["Percent Yield", "Number Wasted"]:
+                    continue
+                else:
+                    df = df[df[col] != match_made[col]]
+    out_data = pd.DataFrame(equip)
+    out_data.reset_index(inplace=True, drop=True)
+    out_data.to_csv('Output.csv')
+
+
+
+
+
+
 
 
 def good_parts_score(image_loc):

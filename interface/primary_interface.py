@@ -8,7 +8,8 @@ import os
 import database
 import ast
 import matching_algos
-
+#TODO: Clear out panel number
+# TODO: Panel Layer double verification
 class DefectMatchingApplication:
     def __init__(self, root):
         self.root = root
