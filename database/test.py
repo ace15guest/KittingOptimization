@@ -1,12 +1,12 @@
 import os
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, ForeignKey, PrimaryKeyConstraint
+from sqlalchemy import create_engine, Column, String, Integer, DateTime, ForeignKey, PrimaryKeyConstraint, Date
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
+import datetime
 
 # Define the database engine and base
-engine = create_engine(rf"sqlite:///{os.getcwd()}/Assets/database/shop_orders1.db")  # Fixed file path
+engine = create_engine(rf"sqlite:///{os.getcwd()}/Assets/database/shop_orders.db")  # Fixed file path
 Base = sqlalchemy.orm.declarative_base()
 
 # Define the ShopOrder model
@@ -18,7 +18,7 @@ class ShopOrder(Base):
     LayerNumber = Column(String, nullable=False)
     PanelNumber = Column(String, nullable=False)
     Images = Column(String, nullable=False)
-    OrderDate = Column(DateTime, default=datetime.utcnow)
+    OrderDate = Column(Date, nullable=False, default=datetime.date.today())
 
     # Composite primary key
     __table_args__ = (
@@ -26,11 +26,28 @@ class ShopOrder(Base):
     )
 
     # Relationship to parts
-    part = relationship("Part", back_populates="shop_orders")
+    # part = relationship("Part", back_populates="shop_orders")
 
     def __repr__(self):
         return f"<ShopOrder(ShopOrderNumber={self.ShopOrderNumber}, PartNumber={self.PartNumber}, LayerNumber={self.LayerNumber}, PanelNumber={self.PanelNumber})>"
+class ShopOrderSides(Base):
+    __tablename__ = 'shop_orders_sides'
 
+    ShopOrderNumber = Column(String, nullable=False)
+    PartNumber = Column(String, nullable=False)
+    LayerNumber = Column(String, nullable=False)
+    PanelNumber = Column(String, nullable=False)
+    Images = Column(String, nullable=False)
+    Side = Column(String, nullable=False)
+    OrderDate = Column(Date, nullable=False, default=datetime.date.today())
+
+    # Composite primary key
+    __table_args__ = (
+        PrimaryKeyConstraint('ShopOrderNumber', 'PartNumber', 'LayerNumber', 'PanelNumber'),
+    )
+
+    # Relationship to parts
+    # part = relationship("Part", back_populates="shop_orders")
 class Part(Base):
     __tablename__ = 'parts'
 
@@ -39,7 +56,7 @@ class Part(Base):
     LayerNames = Column(String, nullable=False)
 
     # Relationship to shop orders
-    shop_orders = relationship("ShopOrder", back_populates="part")
+    # shop_orders = relationship("ShopOrder", back_populates="part")
 
     def __repr__(self):
         return f"<Part(PartNumber={self.PartNumber}, LayerOrder={self.LayerOrder}, LayerNames={self.LayerNames})>"

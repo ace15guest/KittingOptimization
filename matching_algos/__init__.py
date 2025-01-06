@@ -18,11 +18,11 @@ def separate_layers(part_number, db_session):
         combo[layer] = list(layer_info[layer].keys())
 
     layer_combinations = list(product(*[combo[layer] for layer in layer_names], repeat=1))
-    matching_algos(layer_combinations, layer_info, layer_names)
-    return layer_info, combo, layer_combinations
+    optimized_layer_combos = all_comb_brute(layer_combinations, layer_info, layer_names)
+    return optimized_layer_combos
 
 
-def matching_algos(layer_combinations, layer_info, layer_names):
+def all_comb_brute(layer_combinations, layer_info, layer_names):
     panel_options = []
     good_percent = []
     wasted = []
@@ -54,9 +54,8 @@ def matching_algos(layer_combinations, layer_info, layer_names):
     data["Number Wasted"] = wasted
 
     df = pd.DataFrame(data)
-    df.to_csv('All_Combinations.csv', index=False)
-    make_matches(df)
-    return
+    # df.to_csv('All_Combinations.csv', index=False)
+    return make_matches(df)
 
 def make_matches(df):
     equip = []
@@ -80,7 +79,8 @@ def make_matches(df):
                     df = df[df[col] != match_made[col]]
     out_data = pd.DataFrame(equip)
     out_data.reset_index(inplace=True, drop=True)
-    out_data.to_csv('Output.csv')
+    return out_data
+
 
 
 
