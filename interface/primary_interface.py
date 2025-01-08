@@ -303,6 +303,8 @@ class DefectMatchingApplication:
         self.pn_layers.append(self.layer_name_entry.get())
         self.layer_names_entry.delete(0, tk.END)
 
+
+
         self.layer_names_entry.insert(0, str(self.pn_layers))
         return
 
