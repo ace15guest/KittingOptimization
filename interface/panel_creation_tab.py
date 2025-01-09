@@ -276,7 +276,7 @@ class PanelCreationApplication:
     def load_positions_pct(self):
         """Loads image positions, rotations, and file paths from a JSON file."""
 
-        # TODO: Add mirroring if layer is even
+
         try:
             load_file = filedialog.askopenfilename(defaultextension=".json", filetypes=[("JSON", "*.json")])
             with open(load_file, "r") as f:
