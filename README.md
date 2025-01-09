@@ -31,5 +31,11 @@ Please install the items in this order
 
 # Installation
 1. Wherever you want the program to be run from, navigate there in a command prompt. I will choose my downloads' folder. ![alt text](Assets/mdImages/downloads.png)
-2. Type the command `git clone https://github.com/ace15guest/Copper_Balancing_HDP.git`
-
+2. Type the command `git clone https://github.com/ace15guest/KittingOptimization.git` ![alt text](Assets/mdImages/git_clone.png)
+## Running the program
+# Panel Creation
+1. In the command prompt where the project is downloaded type `python panel_creation.py`
+# Image Defects
+1. In the command prompt where the project is downloaded type `python image_defects.py`
+# Optimization
+1. In the command prompt where the project is downloaded type `python optimization.py`
