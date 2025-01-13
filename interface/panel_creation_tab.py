@@ -262,6 +262,8 @@ class PanelCreationApplication:
         if self.pn_var.get() == "":
             messagebox.showwarning("Need Part Number", "A part number is needed to save positions")
             return
+        if len(self.pn_layers) < 2:
+            messagebox.showwarning("Core Error", "Please insert 2 cores or more")
         halfway = int((self.x_y_grid_count)*self.grid_size/2) if self.x_y_grid_count%2 == 0 else int((self.x_y_grid_count-1)*self.grid_size/2)
         save_data = {
             self.pn_var.get(): {position: {"rotation": info["rotation"], "file_path": info["file_path"], "grid_size": self.x_y_grid_count, 'mirrored': mirror_coordinates(position.split(',')[0], position.split(',')[1], halfway, self.x_y_grid_count, self.grid_size)}
