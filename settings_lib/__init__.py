@@ -18,7 +18,7 @@ def create_config_parser(db_path=None):
             return
 
     if db_path is None:
-        db_path = f"{os.environ["LocalAppData"]}/KittingOptimization/database/shop_orders.db"
+        db_path = f"{os.environ['LocalAppData']}/KittingOptimization/database/shop_orders.db"
 
 
     config["DATABASE"] = {"Path": db_path,}
