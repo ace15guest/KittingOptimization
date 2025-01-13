@@ -28,6 +28,8 @@ except KeyError:
     config.read(global_vars.vars.ini_global_path)
 
     db_path = config["DATABASE"]["path"]
+    global_vars.funcs.create_folders(db_path)
+
 
 except FileNotFoundError:
 
@@ -37,6 +39,9 @@ except FileNotFoundError:
     config.read(global_vars.vars.ini_global_path)
 
     db_path = config["DATABASE"]["path"]
+    global_vars.funcs.create_folders(db_path)
+
+
 
 
 # Define the database engine and base
