@@ -166,7 +166,13 @@ class ImageDefectsApplication:
         return
 
     def check_if_inner_layer(self, event):
-        if self.entry_layer_number._values[0] == self.layer_num_var.get() or self.entry_layer_number._values[-1] == self.layer_num_var.get():
+        if self.entry_layer_number._values[0] == self.layer_num_var.get():
+            if self.reverse_side_var.get() != 1:
+                self.reverse_side_var.set(1)
+                self.flip_side()
+            self.reverse_side_checkbtn.configure(state=ctk.DISABLED)
+
+        elif self.entry_layer_number._values[-1] == self.layer_num_var.get():
             if self.reverse_side_var.get() == 1:
                 self.reverse_side_var.set(0)
                 self.flip_side()
@@ -192,7 +198,7 @@ class ImageDefectsApplication:
             layer_names = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber=pn).first().LayerNames.strip())
             self.entry_layer_number.configure(values=layer_names)
             if not flip: # Only need to do this if we are loading a new Part Number in
-                self.entry_layer_number.set(layer_names[0])
+                self.entry_layer_number.set("")
                 self.check_if_inner_layer(None)
             self.x_y_grid_count = list(self.loaded_data[pn].items())[0][1]['grid_size']
             self.redraw_grid(self.canvas_idt, reverse=reverse)

@@ -37,11 +37,12 @@ Please install the items in this order
 # Installation
 1. Wherever you want the program to be run from, navigate there in a command prompt. I will choose my downloads' folder. ![alt text](Assets/mdImages/downloads.png)
 2. Type the command `git clone https://github.com/ace15guest/KittingOptimization.git` ![alt text](Assets/mdImages/git_clone.png)
-3. If you use python for other projects, make a virtual environment with the following steps. If you do not use python, ignore these steps and skip to step 4
+3. Type the command `cd KittingOptimization`
+4. If you use python for other projects, make a virtual environment with the following steps. If you do not use python, ignore these steps and skip to step 4
    1. `python -m venv venv`
    2. `venv\Scripts\activate` 
-      1. This step must be run in the project directory every time a new command prompt is opened 
-4. Type the command `pip install -r requirements.txt`
+      1. This step must be run in the project directory every time a new command prompt is opened
+5. Type the command `pip install -r requirements.txt`
 # Running the program
 There are three separate applications that can be run
 1. [Panel Creation](#panel-creation)
