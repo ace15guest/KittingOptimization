@@ -9,18 +9,22 @@ This is an application used for matching printed circuit board layers. The metho
 Please install the items in this order
 
 ** Nice to have but not required
-1. [Python 3.12]()
-2. [Pip]()
-3. [Git]()
-4. [DB Browser**]()
+1. [Python 3.12](#python)
+2. [Pip](#p)
+3. [Git](#git)
+4. [DB Browser**](#db-browser)
 
 ## Requirements Installation
 ### Python
 1. Click [here](https://www.python.org/ftp/python/3.12.8/python-3.12.8-amd64.exe) to download the python 3.12 installer for 64-bit computers (likely).
 2. In your downloads folder, open the installer
-3. Follow steps 2 - 5 in the pdf [here](https://cse.unl.edu/~lksoh/Classes/CSCE100_Fall20/install/PythonInstallation_WINDOWS.pdf)
-4. Open a command prompt by searching for "cmd" in your windows search bar
-5. In the command prompt type python --version. You should see "Python 3.12.7" displayed. If you see a different Patch version (The last number, .7 in the case below), you can still continue. ![alt text](Assets/mdImages/python_version.png)
+3. Before proceeding to step 3 ensure you check the pip option under optional features
+
+![alt text](Assets/mdImages/pip.webp)
+
+4. Follow steps 2 - 5 in the pdf [here](https://cse.unl.edu/~lksoh/Classes/CSCE100_Fall20/install/PythonInstallation_WINDOWS.pdf)
+5. Open a command prompt by searching for "cmd" in your windows search bar
+6. In the command prompt type python --version. You should see "Python 3.12.7" displayed. If you see a different Patch version (The last number, .7 in the case below), you can still continue. ![alt text](Assets/mdImages/python_version.png)
 
 ### Git
 1. Click [here](https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/Git-2.47.1-64-bit.exe) to download git
