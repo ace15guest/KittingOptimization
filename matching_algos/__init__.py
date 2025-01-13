@@ -36,7 +36,7 @@ def all_comb_brute(layer_combinations, layer_info, layer_names):
         good_imgs = 0
         wasted_imgs = 0
         for i in range(panel_length):
-            image_loc = [layers[j][i] for j in range(3)]
+            image_loc = [layers[j][i] for j in range(len(layer_names))]
             img_good, imgwaste = good_parts_score(image_loc)
             good_imgs += img_good
             wasted_imgs += imgwaste
