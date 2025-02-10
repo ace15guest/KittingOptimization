@@ -52,7 +52,7 @@ class SettingsWindow:
             self.config.write(cf)
         try:
             database.create_db()
-            messagebox.showinfo('Success','Successfully saved the database path. Please Restart the application.')
+            messagebox.showinfo('Success','Successfully saved the database path. A new database has been created. Please Restart the application.')
         except Exception as error:
             print(error)
 

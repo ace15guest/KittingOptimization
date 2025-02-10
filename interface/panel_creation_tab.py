@@ -84,8 +84,8 @@ class PanelCreationApplication:
     def create_interface(self):
         # Part Number Entry
         self.x += self.window_width/7
-        part_number_label = ctk.CTkLabel(self.root, text="Part Number:")
-        part_number_label.place(x=self.x, y=self.y)
+        part_number_label = ctk.CTkLabel(self.root, text="Enter Part Number:")
+        part_number_label.place(x=self.x-35, y=self.y)
         self.x += 75
         self.part_number_entry = ctk.CTkEntry(self.root, textvariable=self.pn_var)
         self.part_number_entry.place(x=self.x, y=self.y)
