@@ -90,6 +90,8 @@ class OptimizationApplication:
         header_names.append("Percent Yield")
         header_names.append("Used")
         self.optimize_table['columns'] = (header_names)
+
+        # Add Layer optimized Layers
         for name in layer_names:
             self.optimize_table.heading(f'Shop Order {name}', text=f"Shop Order {name}")
             self.optimize_table.column(f'Shop Order {name}', stretch=False, width=100)

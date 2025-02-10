@@ -43,6 +43,7 @@ class ImageDefectsApplication:
         self.panel_num_var = ctk.StringVar() # The variable holding the panel number
         self.pn_var = ctk.StringVar()
         self.reverse_side_var = ctk.IntVar() # Variable keeping track of whether the reverse side is clicked
+        self.odd_core_var = ctk.IntVar() # Variable for input whether the external layer is odd or not
         self.layer_name_var = ctk.StringVar()
         self.layer_num_var = ctk.StringVar()
         self.opt_menu_var = ctk.StringVar() # Custom Tkinter Option Menu Var
@@ -92,6 +93,10 @@ class ImageDefectsApplication:
         #Check Button
         self.reverse_side_checkbtn = ctk.CTkCheckBox(self.root, text="Reverse", variable=self.reverse_side_var, command=self.flip_side)
         self.reverse_side_checkbtn.grid(row=3, column=3)
+
+        # If the external is odd allow this to be checked
+        self.odd_lay_extern = ctk.CTkCheckBox(self.root, text="Odd Layer", variable=self.odd_core_var, command=lambda x=None: self.check_if_inner_layer(event=x))
+        self.odd_lay_extern.grid(row=4, column=3)
 
         # Upload to Database
         upload = ctk.CTkButton(self.root, text="Insert Data", command=self.load_to_db)
@@ -166,22 +171,32 @@ class ImageDefectsApplication:
         return
 
     def check_if_inner_layer(self, event):
-        if self.entry_layer_number._values[0] == self.layer_num_var.get():
-            if self.reverse_side_var.get() != 1:
-                self.reverse_side_var.set(1)
-                self.flip_side()
-            self.reverse_side_checkbtn.configure(state=ctk.DISABLED)
+        try:
+            if self.entry_layer_number._values[0] == self.layer_num_var.get() and self.odd_core_var.get() == 0:
+                if self.reverse_side_var.get() != 1:
+                    self.reverse_side_var.set(1)
+                    self.flip_side()
+                self.reverse_side_checkbtn.configure(state=ctk.DISABLED)
 
-        elif self.entry_layer_number._values[-1] == self.layer_num_var.get():
-            if self.reverse_side_var.get() == 1:
-                self.reverse_side_var.set(0)
-                self.flip_side()
+            elif self.entry_layer_number._values[-1] == self.layer_num_var.get() and self.odd_core_var.get() == 0:
+                if self.reverse_side_var.get() == 1:
+                    self.reverse_side_var.set(0)
+                    self.flip_side()
+                else:
+                    self.reverse_side_var.set(0)
+
+                self.reverse_side_checkbtn.configure(state=ctk.DISABLED)
+            elif self.odd_core_var.get() == 1:
+                if self.reverse_side_var.get() == 1:
+                    self.reverse_side_var.set(0)
+                    self.flip_side()
+                    self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
+
+
             else:
-                self.reverse_side_var.set(0)
-
-            self.reverse_side_checkbtn.configure(state=ctk.DISABLED)
-        else:
-            self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
+                self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
+        except IndexError as error:
+            print(error)
 
     def load_positions_idt(self, reverse=False, flip=False):
         try:
@@ -281,12 +296,12 @@ class ImageDefectsApplication:
         Check if it is the top or bottom side or if the reverse button is disabled return external
         :return:
         """
-        if self.reverse_side_checkbtn._state == 'active' or self.reverse_side_checkbtn._state == 'normal':
+        if (self.reverse_side_checkbtn._state == 'active' or self.reverse_side_checkbtn._state == 'normal') and self.odd_core_var.get() == 1:
             if self.reverse_side_var.get():
                 return 'bottom'
             else:
                 return 'top'
-        if self.reverse_side_checkbtn._state == 'disabled':
+        if self.reverse_side_checkbtn._state == 'disabled' and self.odd_core_var.get() == 0:
             return 'external'
 
     def create_session(self):
