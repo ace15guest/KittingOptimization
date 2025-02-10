@@ -5,18 +5,15 @@ from logging import exception
 from pydoc_data.topics import topics
 from tkinter import ttk, filedialog, messagebox
 import customtkinter as ctk
-import sqlalchemy.exc
-from PIL import Image, ImageTk
-import json
-import os
+
 import tkinter
 import database
 import ast
 import matching_algos
-from interface import mirror_coordinates
+
 import global_vars.vars
 import global_vars.funcs
-import settings_lib
+
 
 class OptimizationApplication:
     def __init__(self, root):

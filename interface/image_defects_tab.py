@@ -11,6 +11,7 @@ import sqlalchemy
 import global_vars
 import settings_lib
 import interface.settings
+from error_report.reporting import error_report
 import global_vars.vars
 import global_vars.funcs
 
@@ -95,8 +96,8 @@ class ImageDefectsApplication:
         self.reverse_side_checkbtn.grid(row=3, column=3)
 
         # If the external is odd allow this to be checked
-        self.odd_lay_extern = ctk.CTkCheckBox(self.root, text="Odd Layer", variable=self.odd_core_var, command=lambda x=None: self.check_if_inner_layer(event=x))
-        self.odd_lay_extern.grid(row=4, column=3)
+        self.odd_lay_extern_chk_box = ctk.CTkCheckBox(self.root, text="External Layer on Outer Core", variable=self.odd_core_var, command=lambda x=None: self.check_if_inner_layer(event=x))
+        self.odd_lay_extern_chk_box.grid(row=4, column=3)
 
         # Upload to Database
         upload = ctk.CTkButton(self.root, text="Insert Data", command=self.load_to_db)
@@ -171,6 +172,8 @@ class ImageDefectsApplication:
         return
 
     def check_if_inner_layer(self, event):
+
+
         try:
             if self.entry_layer_number._values[0] == self.layer_num_var.get() and self.odd_core_var.get() == 0:
                 if self.reverse_side_var.get() != 1:
@@ -186,17 +189,26 @@ class ImageDefectsApplication:
                     self.reverse_side_var.set(0)
 
                 self.reverse_side_checkbtn.configure(state=ctk.DISABLED)
+            # If it is an inner core disable the button
+
+
+
             elif self.odd_core_var.get() == 1:
                 if self.reverse_side_var.get() == 1:
                     self.reverse_side_var.set(0)
                     self.flip_side()
                     self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
 
-
             else:
                 self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
+
+            if self.entry_layer_number._values[-1] != self.layer_num_var.get() and self.entry_layer_number._values[0] != self.layer_num_var.get():
+                self.odd_core_var.set(0)
+                self.odd_lay_extern_chk_box.configure(state=ctk.DISABLED)
+            elif self.entry_layer_number._values[-1] == self.layer_num_var.get() or self.entry_layer_number._values[0] == self.layer_num_var.get():
+                self.odd_lay_extern_chk_box.configure(state=ctk.NORMAL)
         except IndexError as error:
-            print(error)
+            error_report(error)
 
     def load_positions_idt(self, reverse=False, flip=False):
         try:
@@ -249,8 +261,9 @@ class ImageDefectsApplication:
                     return
             if not flip:
                 messagebox.showinfo("Loaded", "Image positions loaded successfully.")
-        except FileNotFoundError:
-            messagebox.showerror("Error", "No saved positions found.")
+        except Exception as error:
+            path = error_report(error)
+            messagebox.showerror("Error", f"There has been an error in loading the json. The error reported is {error}. Please see {path} for more information")
         return
 
     def load_to_db(self):
@@ -271,7 +284,7 @@ class ImageDefectsApplication:
                                     str(old_list), side)  # Add to database
 
         except sqlalchemy.exc.IntegrityError as error:
-            print(error)
+            error_report(error)
             messagebox.showwarning('Exists in the database', 'This combination of ShopOrder, PartNumber, LayerNumber, PanelNumber exists in the database.')
             self.db_session.close()
             self.create_session()
@@ -296,7 +309,7 @@ class ImageDefectsApplication:
         Check if it is the top or bottom side or if the reverse button is disabled return external
         :return:
         """
-        if (self.reverse_side_checkbtn._state == 'active' or self.reverse_side_checkbtn._state == 'normal') and self.odd_core_var.get() == 1:
+        if (self.reverse_side_checkbtn._state == 'active' or self.reverse_side_checkbtn._state == 'normal') and (self.odd_core_var.get() == 1 or self.odd_lay_extern_chk_box._state =='disabled'):
             if self.reverse_side_var.get():
                 return 'bottom'
             else:
@@ -369,5 +382,6 @@ class ImageDefectsApplication:
                     self.db_session.delete(side)
                     self.db_session.commit()
             except Exception as error:
-                messagebox.showerror('Error', f'An error occurred while merging information. Please check the error logs. {error}')
+                path = error_report(error)
+                messagebox.showerror('Error', f'An error occurred while merging information. The following error was reported: {error} For more information access: {path}')
 
