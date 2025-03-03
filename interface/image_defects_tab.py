@@ -270,7 +270,11 @@ class ImageDefectsApplication:
         if self.shop_order_num_var.get() == "" or self.layer_num_var.get() == "" or self.pn_var.get() == "" or self.panel_num_var.get() == "":  # Ensure all inputs are met if not throw message error
             messagebox.showwarning("Inputs Needed", "All inputs are necessary to load to the database")
             return
-        layer_order = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber=self.pn_var.get()).first().LayerOrder.strip()) # Get the layer names from the database for the pn
+        try:
+            layer_order = ast.literal_eval(self.db_session.query(database.Part).filter_by(PartNumber=self.pn_var.get()).first().LayerOrder.strip()) # Get the layer names from the database for the pn
+        except sqlalchemy.exc.PendingRollbackError as error:
+            error_report(error)
+            return
         old_list = ["O" for i in layer_order] # Create list of all good parts
 
         for idx, loc in enumerate(layer_order): # Locate bad parts and replace them in the list
@@ -327,10 +331,17 @@ class ImageDefectsApplication:
 
         # Check to see if it is an exernal layer
         if len(matches) == 1 and matches[0].Side == 'external':
-            database.add_shop_order(self.db_session, shop_order_number=self.shop_order_num_var.get(),
+            try:
+                database.add_shop_order(self.db_session, shop_order_number=self.shop_order_num_var.get(),
                                     part_number=self.pn_var.get(), layer_number=self.layer_num_var.get(),
                                     panel_number=self.panel_num_var.get(), images=matches[0].Images)
+            except sqlalchemy.exc.IntegrityError as error:
+                messagebox.showerror("Integrity Error", f"There has been an issue with the database. Please check the error log. {error}")
+                error_report(error)
+                self.db_session.rollback()
+                return
             self.db_session.delete(matches[0])
+
             self.db_session.commit()
             return
 
@@ -338,7 +349,7 @@ class ImageDefectsApplication:
         if len(matches) == 2:
             pass
         elif len(matches) > 2:
-            messagebox.showerror("Databse Issue", f"There should be a maximum of two entries for middle cores.\n"
+            messagebox.showerror("Database Issue", f"There should be a maximum of two entries for middle cores.\n"
                                                   f"Shop Order Number: {self.shop_order_num_var.get()}\n"
                                                   f"Part Number: {self.pn_var.get()}\n"
                                                   f"Panel Number: {self.panel_num_var.get()}\n"
