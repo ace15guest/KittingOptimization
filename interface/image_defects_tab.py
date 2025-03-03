@@ -191,13 +191,13 @@ class ImageDefectsApplication:
                 self.reverse_side_checkbtn.configure(state=ctk.DISABLED)
             # If it is an inner core disable the button
 
-
-
             elif self.odd_core_var.get() == 1:
                 if self.reverse_side_var.get() == 1:
                     self.reverse_side_var.set(0)
                     self.flip_side()
-                    self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
+
+                self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
+
 
             else:
                 self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
