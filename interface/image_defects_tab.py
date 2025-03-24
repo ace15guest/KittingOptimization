@@ -136,8 +136,9 @@ class ImageDefectsApplication:
         for p_coord in primary_coords:
             self.canvas_idt.delete(self.image_positions[p_coord]["line_id1"])
             self.canvas_idt.delete(self.image_positions[p_coord]["line_id2"])
-            self.image_positions[p_coord]["line_id1"] = None
-            self.image_positions[p_coord]["line_id2"] = None
+            self.image_positions[p_coord]["line_id1"] = None # Remove the first line of the X from the dictionary
+            self.image_positions[p_coord]["line_id2"] = None # Remove the second line of the X from the dictionary
+            self.image_positions[p_coord]["x"] = False # Make the X false in the dictionary
 
     def x_out_images(self, event):
         grid_size = self.grid_size
@@ -172,8 +173,6 @@ class ImageDefectsApplication:
         return
 
     def check_if_inner_layer(self, event):
-
-
         try:
             if self.entry_layer_number._values[0] == self.layer_num_var.get() and self.odd_core_var.get() == 0:
                 if self.reverse_side_var.get() != 1:
@@ -197,8 +196,6 @@ class ImageDefectsApplication:
                     self.flip_side()
 
                 self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
-
-
             else:
                 self.reverse_side_checkbtn.configure(state=ctk.NORMAL)
 
@@ -288,15 +285,14 @@ class ImageDefectsApplication:
                                     str(old_list), side)  # Add to database
 
         except sqlalchemy.exc.IntegrityError as error:
-            error_report(error)
-            messagebox.showwarning('Exists in the database', 'This combination of ShopOrder, PartNumber, LayerNumber, PanelNumber exists in the database.')
+            path = error_report(error)
+            messagebox.showwarning('Exists in the database', f'This combination of ShopOrder, PartNumber, LayerNumber, PanelNumber exists in the database. The error file is located {path}')
             self.db_session.close()
             self.create_session()
             self.check_sides_match()  # See if we can combine a front and back layer
 
             return
         self.remove_xs_from_images()
-
 
         self.check_sides_match() # See if we can combine a front and back layer
         save_data = {
@@ -308,6 +304,8 @@ class ImageDefectsApplication:
         messagebox.showinfo("Saved", "Image positions and file paths saved successfully.")
         # Clear the panel image
         self.panel_num_var.set("")
+        self.shop_order_num_var.set("")
+
     def check_side(self):
         """
         Check if it is the top or bottom side or if the reverse button is disabled return external
