@@ -304,7 +304,7 @@ class ImageDefectsApplication:
         messagebox.showinfo("Saved", "Image positions and file paths saved successfully.")
         # Clear the panel image
         self.panel_num_var.set("")
-        self.shop_order_num_var.set("")
+        # self.shop_order_num_var.set("")
 
     def check_side(self):
         """
